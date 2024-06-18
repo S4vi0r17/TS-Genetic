@@ -1,73 +1,86 @@
-import { City } from "./City";
-import { CityManager } from "./CityManager";
+import { createLanguageService } from 'typescript';
+import { City } from './City';
 
 export class Path {
-    private cities: (City | null)[] = [];
-    private fitness: number = 0;
-    private distance: number = 0;
+    public path: City[];
+    private totalDistance: number;
 
     constructor() {
-        for (let i = 0; i < CityManager.numberOfCities(); i++) {
-            this.cities.push(null);
-        }
+        this.path = [];
+        this.totalDistance = 0;
     }
 
-    pathSize(): number {
-        return this.cities.length;
+    getCityFromPath(index: number): City {
+        return this.path[index];
     }
 
-    getCity(index: number): City | null {
-        return this.cities[index];
-    }
-
-    setCity(index: number, city: City | null): void {
-        this.cities[index] = city;
-        this.fitness = 0;
-        this.distance = 0;
-    }
-
-    containsCity(city: City): boolean {
-        return this.cities.includes(city);
-    }
-
-    generateIndividual(): void {
-        for (let cityIndex = 0; cityIndex < CityManager.numberOfCities(); cityIndex++) {
-            this.setCity(cityIndex, CityManager.getCity(cityIndex));
-        }
-        this.cities = this.shuffle(this.cities);
-    }
-
-    getFitness(): number {
-        if (this.fitness === 0) {
-            this.fitness = 1 / this.getDistance();
-        }
-        return this.fitness;
-    }
-
-    getDistance(): number {
-        if (this.distance === 0) {
-            let pathDistance = 0;
-            for (let cityIndex = 0; cityIndex < this.pathSize(); cityIndex++) {
-                const fromCity = this.getCity(cityIndex);
-                const destinationCity = this.getCity(cityIndex + 1 < this.pathSize() ? cityIndex + 1 : 0);
-                if (fromCity && destinationCity) {
-                    pathDistance += fromCity.distanceTo(destinationCity);
-                }
+    calculateEuclideanDistance(): void {
+        let euclideanDistance = 0;
+        for (let i = 0; i < this.path.length; i++) {
+            if (!(i === this.path.length - 1)) {
+                euclideanDistance += Math.sqrt(
+                    Math.pow(this.path[i + 1].getCityPosition().x - this.path[i].getCityPosition().x, 2) +
+                    Math.pow(this.path[i + 1].getCityPosition().y - this.path[i].getCityPosition().y, 2)
+                );
+            } else {
+                euclideanDistance += Math.sqrt(
+                    Math.pow(this.path[0].getCityPosition().x - this.path[i].getCityPosition().x, 2) +
+                    Math.pow(this.path[0].getCityPosition().y - this.path[i].getCityPosition().y, 2)
+                );
             }
-            this.distance = pathDistance;
+            this.totalDistance = euclideanDistance;
         }
-        return this.distance;
     }
 
-    private shuffle(array: (City | null)[]): (City | null)[] {
-        for (let i = array.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [array[i], array[j]] = [array[j], array[i]];
-        }
-        return array;
+    getEuclideanDistance(): number {
+        return this.totalDistance;
     }
 
-    toString(): string {
-        return this.cities.map(city => city ? city.toString() : "").join(" -> ");
+    addCity(city: City): void {
+        this.path.push(city);
+    }
+
+    printPath(): void {
+        for (let i = 0; i < this.path.length; i++) {
+            process.stdout.write(`${this.path[i].getCityName()}\t`);
+        }
+        process.stdout.write(`${this.totalDistance}`);
+        if (this.isValidPath()) {
+            process.stdout.write(' Valid path');
+        } else {
+            process.stdout.write(' Invalid path');
+        }
+        process.stdout.write('\n');
+    }
+
+    // PrintPath(): void {
+    //     for (let i = 0; i < this.path.length; i++) {
+    //         console.log(`${this.path[i].getCityName()}\t`);
+    //     }
+    //     console.log(`${this.totalDistance}`);
+    // }
+
+    // private isValidPath(): boolean {
+    //     for (let i = 0; i < this.path.length - 1; i++) {
+    //         for (let j = i + 1; j < this.path.length; j++) {
+    //             if (this.path[i].getCityName() === this.path[j].getCityName()) {
+    //                 return false;
+    //             }
+    //         }
+    //     }
+    //     return true;
+    // }
+
+    private isValidPath(): boolean {
+        const visitedCities = new Set<string>();
+        for (const city of this.path) {
+            if (visitedCities.has(city.getCityName())) {
+                return false;
+            }
+            visitedCities.add(city.getCityName());
+        }
+        // Asegurarse de que la ruta comienza y termina en la misma ciudad
+        return this.path.length > 0 && this.path[0].getCityName() === this.path[this.path.length - 1].getCityName();
     }
 }
+

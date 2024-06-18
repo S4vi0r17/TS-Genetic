@@ -1,27 +1,22 @@
 export class City {
-    private x: number;
-    private y: number;
+    private cityPosition: Point;
+    private cityName: string;
 
-    constructor(x: number, y: number) {
-        this.x = x;
-        this.y = y;
+    constructor(name: string, coordinate: Point) {
+        this.cityName = name;
+        this.cityPosition = coordinate;
     }
 
-    getX(): number {
-        return this.x;
+    getCityName(): string {
+        return this.cityName;
     }
 
-    getY(): number {
-        return this.y;
+    getCityPosition(): Point {
+        return this.cityPosition;
     }
+}
 
-    distanceTo(city: City): number {
-        const xDistance = Math.abs(this.getX() - city.getX());
-        const yDistance = Math.abs(this.getY() - city.getY());
-        return Math.sqrt((xDistance * xDistance) + (yDistance * yDistance));
-    }
-
-    toString(): string {
-        return `${this.getX()}, ${this.getY()}`;
-    }
+interface Point {
+    x: number;
+    y: number;
 }
