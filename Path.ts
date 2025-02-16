@@ -1,5 +1,22 @@
-import { createLanguageService } from 'typescript';
 import { City } from './City';
+
+// Códigos ANSI para colores
+const colors = {
+    reset: '\x1b[0m',
+    bright: '\x1b[1m',
+    dim: '\x1b[2m',
+    
+    fg: {
+        black: '\x1b[30m',
+        red: '\x1b[31m',
+        green: '\x1b[32m',
+        yellow: '\x1b[33m',
+        blue: '\x1b[34m',
+        magenta: '\x1b[35m',
+        cyan: '\x1b[36m',
+        white: '\x1b[37m'
+    }
+};
 
 export class Path {
     public path: City[];
@@ -41,46 +58,44 @@ export class Path {
     }
 
     printPath(): void {
-        for (let i = 0; i < this.path.length; i++) {
-            process.stdout.write(`${this.path[i].getCityName()}\t`);
+        // Mostrar el orden de las ciudades con mejor formato
+        const cityNames = this.path.map(city => city.getCityName());
+        
+        console.log(`${colors.fg.cyan}Ruta: ${colors.reset}`);
+        
+        // Imprimir las ciudades en grupos de 5 por línea
+        for (let i = 0; i < cityNames.length; i += 5) {
+            const line = cityNames.slice(i, i + 5).join(' → ');
+            if (i === 0) {
+                console.log(`  ${colors.fg.green}${line}${colors.reset}`);
+            } else {
+                console.log(`  ${colors.fg.yellow}${line}${colors.reset}`);
+            }
         }
-        process.stdout.write(`${this.totalDistance}`);
-        if (this.isValidPath()) {
-            process.stdout.write(' Valid path');
-        } else {
-            process.stdout.write(' Invalid path');
-        }
-        process.stdout.write('\n');
+        
+        // Mostrar la distancia total y si es válida
+        const validStatus = this.isValidPath() 
+            ? `${colors.fg.green}Válida${colors.reset}` 
+            : `${colors.fg.red}Inválida${colors.reset}`;
+            
+        console.log(`${colors.fg.white}Distancia total: ${colors.bright}${this.totalDistance.toFixed(2)}${colors.reset}`);
+        console.log(`${colors.fg.white}Estado de la ruta: ${validStatus}`);
     }
-
-    // PrintPath(): void {
-    //     for (let i = 0; i < this.path.length; i++) {
-    //         console.log(`${this.path[i].getCityName()}\t`);
-    //     }
-    //     console.log(`${this.totalDistance}`);
-    // }
-
-    // private isValidPath(): boolean {
-    //     for (let i = 0; i < this.path.length - 1; i++) {
-    //         for (let j = i + 1; j < this.path.length; j++) {
-    //             if (this.path[i].getCityName() === this.path[j].getCityName()) {
-    //                 return false;
-    //             }
-    //         }
-    //     }
-    //     return true;
-    // }
 
     private isValidPath(): boolean {
         const visitedCities = new Set<string>();
-        for (const city of this.path) {
-            if (visitedCities.has(city.getCityName())) {
+        
+        // Verificar todas las ciudades excepto la última (que debe ser igual a la primera)
+        for (let i = 0; i < this.path.length - 1; i++) {
+            const cityName = this.path[i].getCityName();
+            if (visitedCities.has(cityName)) {
                 return false;
             }
-            visitedCities.add(city.getCityName());
+            visitedCities.add(cityName);
         }
-        // Asegurarse de que la ruta comienza y termina en la misma ciudad
-        return this.path.length > 0 && this.path[0].getCityName() === this.path[this.path.length - 1].getCityName();
+        
+        // Verificar que la ruta comience y termine en la misma ciudad
+        return this.path.length > 0 && 
+               this.path[0].getCityName() === this.path[this.path.length - 1].getCityName();
     }
 }
-
